@@ -9,3 +9,7 @@ use_jinja2 = false
 [ExampleClass.class_method]
 prompt = "This is an example prompt for the class method."
 use_jinja2 = true
+
+[special_function_key]
+prompt = "This is a special prompt for the function with a specified key."
+use_jinja2 = false

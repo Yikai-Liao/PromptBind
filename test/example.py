@@ -10,6 +10,10 @@ def example_function(prompt: PromptEntry) -> None:
     print("This is an example function.")
 
 
+@with_prompt(key="special_function_key")
+def function_with_key(prompt: PromptEntry) -> None:
+    print("Prompt:", prompt.render())
+    print("This function has a specified prompt key.")
 
 class ExampleClass:
     @with_prompt()

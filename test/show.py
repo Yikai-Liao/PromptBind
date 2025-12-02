@@ -1,6 +1,6 @@
 import prelude
 
-from example import example_function, ExampleClass
+from example import example_function, ExampleClass, function_with_key
 from promptbind.util import get_prompt_key, set_prompt_key_patch, unset_prompt_key_patch
 
 if __name__ == "__main__":
@@ -17,3 +17,6 @@ if __name__ == "__main__":
     # Test class method
     obj = ExampleClass()
     obj.class_method()
+
+    # Test function with specified key
+    function_with_key()
