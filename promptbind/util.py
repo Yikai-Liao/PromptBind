@@ -94,7 +94,7 @@ def set_prompt_key_patch(func: Callable, prompt_key: str) -> None:
         func (Callable): The function to set the attribute on.
         prompt_key (str): The prompt key to be set as an attribute.
     """
-    if (raw_func := getattr(func, "__wrapped__", None)) and getattr(func, PROMPT_BIND_DECORATOR, True):
+    if (raw_func := getattr(func, "__wrapped__", None)) and getattr(func, PROMPT_BIND_DECORATOR, False):
         setattr(raw_func, PROMPT_KEY_PATCH, prompt_key)
     else:
         setattr(func, PROMPT_KEY_PATCH, prompt_key)
