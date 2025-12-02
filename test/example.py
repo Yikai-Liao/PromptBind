@@ -9,6 +9,8 @@ def example_function(prompt: PromptEntry) -> None:
     print("Render time:", timeit.timeit(lambda: prompt.render(name="User"), number=1000))
     print("This is an example function.")
 
+
+
 class ExampleClass:
     @with_prompt()
     def class_method(self, prompt: PromptEntry) -> None:
