@@ -12,7 +12,7 @@ class PromptEntry:
             template = jinja2.Template(self.prompt)
             return template.render(**kwargs)
         
-        if not kwargs:
+        if kwargs:
             warnings.warn("Rendering a prompt without jinja2 but with kwargs has no effect.", UserWarning)
 
         return self.prompt
