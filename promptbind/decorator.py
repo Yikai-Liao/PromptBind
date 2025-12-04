@@ -79,7 +79,6 @@ def with_prompt(key: str | None = None) -> Callable[..., Callable[..., Any]]:
             @wraps(impl)
             def wrapper_func(*args: Any, **kwargs: Any) -> Any:
                 prompt = dispatch_prompt_entry(impl)
-                print(prompt)
                 return impl(prompt, *args, **kwargs)
 
             set_is_promptbind_decorator(wrapper_func)
