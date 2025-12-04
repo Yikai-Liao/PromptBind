@@ -1,10 +1,12 @@
 from collections.abc import Callable
 from typing import Any
 from functools import wraps
+import inspect
 
 from .container import PromptEntry
 from .bank import register_and_check, get_prompt_entry
 from .util import set_prompt_key, get_effective_prompt_key, set_is_promptbind_decorator
+
 
 def has_self_or_cls(impl: Callable[..., Any]) -> bool:
     """
@@ -17,6 +19,7 @@ def has_self_or_cls(impl: Callable[..., Any]) -> bool:
     if code_varnames:
         first_param = code_varnames[0]
     return qualname.count(".") >= 1 and first_param in ("self", "cls")
+
 
 def dispatch_prompt_entry(func: Callable[..., Any]) -> PromptEntry:
     """
@@ -34,16 +37,34 @@ def dispatch_prompt_entry(func: Callable[..., Any]) -> PromptEntry:
     assert prompt_key is not None, "Prompt key is not set for the function"
     return get_prompt_entry(src_path, prompt_key)
 
-def with_prompt(key: str|None = None) -> Callable[..., Callable[..., Any]]:
-    
+
+def _exposed_signature(impl: Callable[..., Any]) -> inspect.Signature:
+    """
+    Build a public-facing signature that hides the injected prompt parameter.
+
+    The original implementation expects the PromptEntry as the first argument
+    (after `self/cls` for methods). External callers should not see it.
+    """
+    sig = inspect.signature(impl)
+    params = list(sig.parameters.values())
+    if not params:
+        return sig
+
+    # For methods, drop the parameter after `self`/`cls`; otherwise drop the first.
+    drop_index = 1 if has_self_or_cls(impl) and len(params) >= 2 else 0
+    params.pop(drop_index)
+    return sig.replace(parameters=params)
+
+
+def with_prompt(key: str | None = None) -> Callable[..., Callable[..., Any]]:
     def decorator(impl: Callable[..., Any]) -> Callable[..., Any]:
         src_path: str = impl.__code__.co_filename
         qualname: str = impl.__qualname__
-        rigister_key = key or qualname
+        register_key = key or qualname
 
-        # Register and check the prompt key existance
-        register_and_check(src_path, rigister_key)
-        set_prompt_key(impl, rigister_key)
+        # Register and check the prompt key existence
+        register_and_check(src_path, register_key)
+        set_prompt_key(impl, register_key)
         # Wrap the implementation based on whether it's a method or a function
         if has_self_or_cls(impl):
             @wraps(impl)
@@ -52,16 +73,19 @@ def with_prompt(key: str|None = None) -> Callable[..., Callable[..., Any]]:
                 return impl(self_or_cls, prompt, *args, **kwargs)
 
             set_is_promptbind_decorator(wrapper_class)
+            wrapper_class.__signature__ = _exposed_signature(impl)
             return wrapper_class
         else:
             @wraps(impl)
             def wrapper_func(*args: Any, **kwargs: Any) -> Any:
                 prompt = dispatch_prompt_entry(impl)
+                print(prompt)
                 return impl(prompt, *args, **kwargs)
-            
+
             set_is_promptbind_decorator(wrapper_func)
+            wrapper_func.__signature__ = _exposed_signature(impl)
             return wrapper_func
-    
+
     return decorator
 
 
